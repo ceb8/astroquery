@@ -13,6 +13,7 @@ from ._astropy_init import *
 # ----------------------------------------------------------------------------
 
 import os
+from astropy import config as _config
 
 
 # Set the bibtex entry to the article referenced in CITATION.
@@ -27,3 +28,13 @@ def _get_bibtex():
 
 
 __citation__ = __bibtex__ = _get_bibtex()
+
+
+class Conf(_config.ConfigNamespace):
+    
+    default_cache_timeout = _config.ConfigItem(
+          60.0*60.0*24.0,
+          'Astroquery-wide default cache timeout (seconds).'
+          )
+
+conf = Conf()
