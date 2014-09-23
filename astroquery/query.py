@@ -9,7 +9,10 @@ import hashlib
 import keyring
 import io
 import os
+import warnings
 import requests
+
+from datetime import datetime, timedelta
 
 import six
 from astropy.config import paths
@@ -20,6 +23,7 @@ import astropy.utils.data
 
 from . import version
 from .utils import system_tools
+from astroquery import conf
 
 __all__ = ['BaseQuery', 'QueryWithLogin']
 
@@ -99,14 +103,21 @@ class AstroQuery(object):
     def from_cache(self, cache_location):
         request_file = self.request_file(cache_location)
         try:
-            with open(request_file, "rb") as f:
-                response = pickle.load(f)
-            if not isinstance(response, requests.Response):
+            current_time = datetime.utcnow()
+            cache_time = datetime.utcfromtimestamp(os.path.getmtime(request_file))
+            expired = ((current_time-cache_time) > timedelta(seconds=conf.default_cache_timeout))
+            if not expired:
+                with open(request_file, "rb") as f:
+                    response = pickle.load(f)
+                if not isinstance(response, requests.Response):
+                    response = None
+            else:
+                log.debug("Cache expired for {0}...".format(request_file))
                 response = None
         except IOError:  # TODO: change to FileNotFoundError once drop py2 support
             response = None
         if response:
-            log.debug("Retrieving data from {0}".format(request_file))
+            log.debug("Retrieved data from {0}".format(request_file))
         return response
 
 
