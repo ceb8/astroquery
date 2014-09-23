@@ -12,6 +12,7 @@ to access online Astronomical data. Each web service has its own sub-package.
 from ._astropy_init import *
 # ----------------------------------------------------------------------------
 
+
 import os
 from astropy import config as _config
 
@@ -36,5 +37,6 @@ class Conf(_config.ConfigNamespace):
           60.0*60.0*24.0,
           'Astroquery-wide default cache timeout (seconds).'
           )
+
 
 conf = Conf()
