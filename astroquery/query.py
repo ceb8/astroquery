@@ -110,7 +110,8 @@ class AstroQuery:
         try:
             with open(request_file, "rb") as f:
                 response = pickle.load(f)
-            if not isinstance(response, requests.Response):
+            if not isinstance(response, requests.Response) and not isinstance(response, list):
+                # MAST query response is a list of Response
                 response = None
         except FileNotFoundError:
             response = None
