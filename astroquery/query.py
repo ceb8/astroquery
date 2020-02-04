@@ -104,15 +104,15 @@ class AstroQuery(object):
         fn = os.path.join(cache_location, self.hash() + ".pickle")
         return fn
 
-    def from_cache(self, cache_location):
+    def from_cache(self, cache_location, cache_timeout):
         request_file = self.request_file(cache_location)
         try:
-            if conf.default_cache_timeout is None:
+            if cache_timeout is None:
                 expired = False
             else:
                 current_time = datetime.utcnow()
                 cache_time = datetime.utcfromtimestamp(os.path.getmtime(request_file))
-                expired = ((current_time-cache_time) > timedelta(seconds=conf.default_cache_timeout))
+                expired = ((current_time-cache_time) > timedelta(seconds=cache_timeout))
             if not expired:
                 with open(request_file, "rb") as f:
                     response = pickle.load(f)
@@ -169,12 +169,34 @@ class BaseQuery(object):
             'astroquery/{vers} {olduseragent}'
             .format(vers=version.version,
                     olduseragent=S.headers['User-Agent']))
-        self.name = self.__class__.__name__.split("Class")[0]
-        self._cache_active = conf.use_cache
+        self.cache_location = os.path.join(
+            conf.cache_location,
+            self.__class__.__name__.split("Class")[0])
+        
+        self.use_cache = conf.use_cache
+        self.cache_timeout = conf.default_cache_timeout
 
     def __call__(self, *args, **kwargs):
         """ init a fresh copy of self """
         return self.__class__(*args, **kwargs)
+
+    def clear_cache():
+        """Removes all cache files."""
+
+        cache_files = [x for x in os.listdir(self.cache_location) if x.endswidth("pickle")]
+        for fle in cache_files:
+            os.remove(fle)
+
+    def reset_cache_preferences():
+        """Resets cache preferences to default values"""
+
+        self.cache_location = os.path.join(
+            conf.cache_location,
+            self.__class__.__name__.split("Class")[0])
+        
+        self.use_cache = conf.use_cache
+        self.cache_timeout = conf.default_cache_timeout
+        
 
     def _request(self, method, url, params=None, data=None, headers=None,
                  files=None, save=False, savedir='', timeout=None, cache=None,
@@ -233,13 +255,10 @@ class BaseQuery(object):
             files=files,
             timeout=timeout
         )
-
-        # Set up cache
-        if (cache is True) or ((cache is not False) and conf.use_cache):
-            cache_location = os.path.join(conf.cache_location, self.name)
+    
+        if (cache is not False) and self.use_cache:
             cache = True
         else:
-            cache_location = None
             cache = False
             
         if save:
@@ -248,25 +267,25 @@ class BaseQuery(object):
                 # Windows doesn't allow special characters in filenames like
                 # ":" so replace them with an underscore
                 local_filename = local_filename.replace(':', '_')
-            local_filepath = os.path.join(savedir or cache_location  or '.', local_filename)
+            local_filepath = os.path.join(savedir or self.cache_location  or '.', local_filename)
             self._download_file(url, local_filepath, cache=cache,
                                 continuation=continuation, method=method,
                                 auth=auth, **req_kwargs)
             return local_filepath
         else:
             query = AstroQuery(method, url, **req_kwargs)
-            if ((cache_location is None) or (not cache)):
+            if ((self.cache_location is None) or (cache is False)):
                 response = query.request(self._session, stream=stream,
                                          auth=auth, verify=verify)
             else:
-                response = query.from_cache(cache_location)
+                response = query.from_cache(self.cache_location, self.cache_timeout)
                 if not response:
                     response = query.request(self._session,
-                                             cache_location,
+                                             self.cache_location,
                                              stream=stream,
                                              auth=auth,
                                              verify=verify)
-                    to_cache(response, query.request_file(cache_location))
+                    to_cache(response, query.request_file(self.cache_location))
             self._last_query = query
             return response
 
