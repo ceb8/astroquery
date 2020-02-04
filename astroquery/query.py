@@ -107,9 +107,12 @@ class AstroQuery(object):
     def from_cache(self, cache_location):
         request_file = self.request_file(cache_location)
         try:
-            current_time = datetime.utcnow()
-            cache_time = datetime.utcfromtimestamp(os.path.getmtime(request_file))
-            expired = ((current_time-cache_time) > timedelta(seconds=conf.default_cache_timeout))
+            if conf.default_cache_timeout is None:
+                expired = False
+            else:
+                current_time = datetime.utcnow()
+                cache_time = datetime.utcfromtimestamp(os.path.getmtime(request_file))
+                expired = ((current_time-cache_time) > timedelta(seconds=conf.default_cache_timeout))
             if not expired:
                 with open(request_file, "rb") as f:
                     response = pickle.load(f)
@@ -166,20 +169,15 @@ class BaseQuery(object):
             'astroquery/{vers} {olduseragent}'
             .format(vers=version.version,
                     olduseragent=S.headers['User-Agent']))
-
-        self.cache_location = os.path.join(
-            paths.get_cache_dir(), 'astroquery',
-            self.__class__.__name__.split("Class")[0])
-        if not os.path.exists(self.cache_location):
-            os.makedirs(self.cache_location)
-        self._cache_active = True
+        self.name = self.__class__.__name__.split("Class")[0]
+        self._cache_active = conf.use_cache
 
     def __call__(self, *args, **kwargs):
         """ init a fresh copy of self """
         return self.__class__(*args, **kwargs)
 
     def _request(self, method, url, params=None, data=None, headers=None,
-                 files=None, save=False, savedir='', timeout=None, cache=True,
+                 files=None, save=False, savedir='', timeout=None, cache=None,
                  stream=False, auth=None, continuation=True, verify=True):
         """
         A generic HTTP request method, similar to `requests.Session.request`
@@ -210,6 +208,7 @@ class BaseQuery(object):
             somewhere other than `BaseQuery.cache_location`
         timeout : int
         cache : bool
+            Override global cache settings.
         verify : bool
             Verify the server's TLS certificate?
             (see http://docs.python-requests.org/en/master/_modules/requests/sessions/?highlight=verify)
@@ -234,32 +233,40 @@ class BaseQuery(object):
             files=files,
             timeout=timeout
         )
+
+        # Set up cache
+        if (cache is True) or ((cache is not False) and conf.use_cache):
+            cache_location = os.path.join(conf.cache_location, self.name)
+            cache = True
+        else:
+            cache_location = None
+            cache = False
+            
         if save:
             local_filename = url.split('/')[-1]
             if os.name == 'nt':
                 # Windows doesn't allow special characters in filenames like
                 # ":" so replace them with an underscore
                 local_filename = local_filename.replace(':', '_')
-            local_filepath = os.path.join(self.cache_location or savedir or '.', local_filename)
+            local_filepath = os.path.join(savedir or cache_location  or '.', local_filename)
             self._download_file(url, local_filepath, cache=cache,
                                 continuation=continuation, method=method,
                                 auth=auth, **req_kwargs)
             return local_filepath
         else:
             query = AstroQuery(method, url, **req_kwargs)
-            if ((self.cache_location is None) or (not self._cache_active) or (not cache)):
-                with suspend_cache(self):
-                    response = query.request(self._session, stream=stream,
-                                             auth=auth, verify=verify)
+            if ((cache_location is None) or (not cache)):
+                response = query.request(self._session, stream=stream,
+                                         auth=auth, verify=verify)
             else:
-                response = query.from_cache(self.cache_location)
+                response = query.from_cache(cache_location)
                 if not response:
                     response = query.request(self._session,
-                                             self.cache_location,
+                                             cache_location,
                                              stream=stream,
                                              auth=auth,
                                              verify=verify)
-                    to_cache(response, query.request_file(self.cache_location))
+                    to_cache(response, query.request_file(cache_location))
             self._last_query = query
             return response
 
@@ -281,6 +288,7 @@ class BaseQuery(object):
             supports HTTP "range" requests, the download will be continued
             where it left off.
         cache : bool
+            Cache downloaded file. Defaults to False.
         method : "GET" or "POST"
         head_safe : bool
         """
