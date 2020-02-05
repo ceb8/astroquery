@@ -172,7 +172,7 @@ class BaseQuery(object):
         self.cache_location = os.path.join(
             conf.cache_location,
             self.__class__.__name__.split("Class")[0])
-        
+
         self.use_cache = conf.use_cache
         self.cache_timeout = conf.default_cache_timeout
 
@@ -185,7 +185,7 @@ class BaseQuery(object):
 
         cache_files = [x for x in os.listdir(self.cache_location) if x.endswith("pickle")]
         for fle in cache_files:
-            os.remove(os.path.join(self.cache_location,fle))
+            os.remove(os.path.join(self.cache_location, fle))
 
     def reset_cache_preferences(self):
         """Resets cache preferences to default values"""
@@ -193,10 +193,10 @@ class BaseQuery(object):
         self.cache_location = os.path.join(
             conf.cache_location,
             self.__class__.__name__.split("Class")[0])
-        
+
         self.use_cache = conf.use_cache
         self.cache_timeout = conf.default_cache_timeout
-        
+
 
     def _request(self, method, url, params=None, data=None, headers=None,
                  files=None, save=False, savedir='', timeout=None, cache=None,
@@ -255,19 +255,19 @@ class BaseQuery(object):
             files=files,
             timeout=timeout
         )
-    
+
         if (cache is not False) and self.use_cache:
             cache = True
         else:
             cache = False
-            
+
         if save:
             local_filename = url.split('/')[-1]
             if os.name == 'nt':
                 # Windows doesn't allow special characters in filenames like
                 # ":" so replace them with an underscore
                 local_filename = local_filename.replace(':', '_')
-            local_filepath = os.path.join(savedir or self.cache_location  or '.', local_filename)
+            local_filepath = os.path.join(savedir or self.cache_location or '.', local_filename)
             self._download_file(url, local_filepath, cache=cache,
                                 continuation=continuation, method=method,
                                 auth=auth, **req_kwargs)

@@ -31,9 +31,9 @@ __citation__ = __bibtex__ = _get_bibtex()
 
 
 class Conf(_config.ConfigNamespace):
-    
+
     default_cache_timeout = _config.ConfigItem(
-          86400, # 24 hours
+          86400,  # 24 hours
           'Astroquery-wide default cache timeout (seconds).'
           )
     cache_location = _config.ConfigItem(
@@ -44,5 +44,6 @@ class Conf(_config.ConfigNamespace):
         True,
         "Astroquery global cache usage, False turns off all caching."
         )
+
 
 conf = Conf()
