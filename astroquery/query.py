@@ -180,14 +180,14 @@ class BaseQuery(object):
         """ init a fresh copy of self """
         return self.__class__(*args, **kwargs)
 
-    def clear_cache():
+    def clear_cache(self):
         """Removes all cache files."""
 
-        cache_files = [x for x in os.listdir(self.cache_location) if x.endswidth("pickle")]
+        cache_files = [x for x in os.listdir(self.cache_location) if x.endswith("pickle")]
         for fle in cache_files:
-            os.remove(fle)
+            os.remove(os.path.join(self.cache_location,fle))
 
-    def reset_cache_preferences():
+    def reset_cache_preferences(self):
         """Resets cache preferences to default values"""
 
         self.cache_location = os.path.join(
