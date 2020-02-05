@@ -197,7 +197,6 @@ class BaseQuery(object):
         self.use_cache = conf.use_cache
         self.cache_timeout = conf.default_cache_timeout
 
-
     def _request(self, method, url, params=None, data=None, headers=None,
                  files=None, save=False, savedir='', timeout=None, cache=None,
                  stream=False, auth=None, continuation=True, verify=True):
