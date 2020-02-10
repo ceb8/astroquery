@@ -538,9 +538,9 @@ class TestMast(object):
         assert sector_table['camera'][0] == 1
         assert sector_table['ccd'][0] == 3
 
-        # This should always return no results
-        coord = SkyCoord(0, 90, unit="deg")
-        sector_table = mast.Tesscut.get_sectors(coordinates=coord)
+        # This should always return no results 
+        coord = SkyCoord(90, -66.5, unit="deg")
+        sector_table = mast.Tesscut.get_sectors(coordinates=coord, radius=0)
         assert isinstance(sector_table, Table)
         assert len(sector_table) == 0
 
