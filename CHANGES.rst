@@ -20,6 +20,9 @@ jplhorizons
 - Fix for changes in HORIZONS return results after their 2020 Feb 12
   update. [#1650]
 
+mast
+^^^^
+- Module refactor [#1645]
 
 Infrastructure, Utility and Other Changes and Additions
 -------------------------------------------------------
