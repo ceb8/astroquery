@@ -26,6 +26,7 @@ jplhorizons
 - Fix for changes in HORIZONS return results after their 2020 Feb 12
   update. [#1650]
 
+
 alma
 ^^^^
 
@@ -34,6 +35,11 @@ alma
   service interruption may have occurred.  Note that the ``stage_data`` column
   ``uid`` has been renamed ``mous_uid``, which is a technical correction, and
   several columns have been added [#1644]
+
+
+mast
+^^^^
+- Module refactor [#1645]
 
 
 Infrastructure, Utility and Other Changes and Additions
