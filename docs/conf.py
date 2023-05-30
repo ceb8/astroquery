@@ -54,7 +54,7 @@ setup_cfg = dict(conf.items('metadata'))
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns.append('_templates')
+#exclude_patterns.append('_templates')
 exclude_patterns.append('release_not*')
 
 # This is added to the end of RST files - a good place to put substitutions to
@@ -112,18 +112,29 @@ html_theme_options = {
 # To use a different custom theme, add the directory containing the theme.
 # html_theme_path = []
 
+# Custome template path, adding custom css and home link
+templates_path = ["_templates"]
+
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes. To override the custom theme, set this to the
 # name of a builtin theme or the name of a custom theme in html_theme_path.
-# html_theme = None
+#html_theme = ''
+
+
+master_doc='contents'
+html_extra_path=['index.html']
 
 # Custom sidebar templates, maps document names to template names.
-# html_sidebars = {}
+html_sidebars = { '**': ['logo.html', 'astroquery_toc.html' ] }
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-# html_favicon = ''
+html_favicon = '_static/astroquery_logo.ico'
+
+# The name of an image file (relative to this directory) to place at the top
+# of the sidebar.
+#html_logo = ''
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -136,6 +147,9 @@ html_title = '{0} v{1}'.format(project, release)
 # Output file base name for HTML help builder.
 htmlhelp_basename = project + 'doc'
 
+# Static files to copy after template files
+html_static_path = ['_static']
+html_style = 'astroquery.css'
 
 # -- Options for LaTeX output --------------------------------------------------
 
